@@ -7,22 +7,31 @@ import (
 	"time"
 )
 
-type cell struct {
-	top    bool
-	right  bool
-	bottom bool
-	left   bool
+type Direction uint8
+
+const (
+	LEFT Direction = iota
+	RIGHT
+	UP
+	DOWN
+)
+
+type Cell struct {
+	Top    bool
+	Right  bool
+	Bottom bool
+	Left   bool
 }
 
 type Maze struct {
-	width  int
-	height int
-	cells  []cell
+	Width  int
+	Height int
+	cells  []Cell
 }
 
 func NewMaze(width, height int) Maze {
-	m := Maze{width: width, height: height}
-	m.cells = make([]cell, width*height)
+	m := Maze{Width: width, Height: height}
+	m.cells = make([]Cell, width*height)
 
 	m.generate()
 
@@ -33,10 +42,6 @@ func (m Maze) generate() {
 	// We treat each cell as a disjoint set
 	// we keep removing a random wall until
 	// we are left with only one set
-
-	// each array value in Maze.conent represents a wall
-	//     we need +1 for the outer walls, - fence posts
-	// each array value in sets represents a cell
 
 	// populate the matrix with each cell as a unique set
 	sets := make([]int, len(m.cells))
@@ -93,7 +98,7 @@ func (m Maze) getRandomNeighbor(index int) int {
 				y -= 1
 			}
 		}
-		if x >= 0 && x < m.width && y >= 0 && y < m.height {
+		if x >= 0 && x < m.Width && y >= 0 && y < m.Height {
 			return m.getIndex(x, y)
 		}
 
@@ -101,33 +106,30 @@ func (m Maze) getRandomNeighbor(index int) int {
 }
 
 func (m Maze) removeWall(index1, index2 int) {
+	// swap indexes to simplify states to check as necessary
 	if index2 < index1 {
 		index1, index2 = index2, index1
 	}
 
-	// case: left and right
-	//       2 and 3:
-	// case: top and bottom
-	//       2 and 7:
-
 	// if this is a left-right neighbor
 	if index2-index1 == 1 {
-		m.cells[index1].right = true
-		m.cells[index2].left = true
+		m.cells[index1].Right = true
+		m.cells[index2].Left = true
+		// else top-bottom neighbor
 	} else {
-		m.cells[index1].bottom = true
-		m.cells[index2].top = true
+		m.cells[index1].Bottom = true
+		m.cells[index2].Top = true
 	}
 }
 
 func (m Maze) getXY(index int) (int, int) {
-	y := int(math.Floor(float64(index) / float64(m.width)))
-	x := index - m.width*y
+	y := int(math.Floor(float64(index) / float64(m.Width)))
+	x := index - m.Width*y
 	return x, y
 }
 
 func (m Maze) getIndex(x, y int) int {
-	return m.width*y + x
+	return m.Width*y + x
 }
 
 // 0,  1,  2,  3,  4
@@ -149,47 +151,47 @@ func (m Maze) getIndex(x, y int) int {
 // Reject neighbor (5, 8)
 // Reject neighbor (4, 9)
 
-func (m Maze) getAt(x, y int) cell {
+func (m Maze) GetAt(x, y int) Cell {
 	return m.cells[m.getIndex(x, y)]
 }
 
 func (m Maze) setTopAt(x, y int, wall bool) {
-	m.cells[m.getIndex(x, y)].top = !wall
+	m.cells[m.getIndex(x, y)].Top = !wall
 }
 
 func (m Maze) setRightAt(x, y int, wall bool) {
-	m.cells[m.getIndex(x, y)].right = !wall
+	m.cells[m.getIndex(x, y)].Right = !wall
 }
 
 func (m Maze) setBottomAt(x, y int, wall bool) {
-	m.cells[m.getIndex(x, y)].bottom = !wall
+	m.cells[m.getIndex(x, y)].Bottom = !wall
 }
 
 func (m Maze) setLeftAt(x, y int, wall bool) {
-	m.cells[m.getIndex(x, y)].left = !wall
+	m.cells[m.getIndex(x, y)].Left = !wall
 }
 
 func (m Maze) String() string {
 	var buffer bytes.Buffer
 
-	for i := 0; i < m.width*2+1; i++ {
+	for i := 0; i < m.Width*2+1; i++ {
 		buffer.WriteString("_")
 	}
 
 	buffer.WriteString("\n")
 
-	for y := 0; y < m.height; y++ {
+	for y := 0; y < m.Height; y++ {
 
 		buffer.WriteString("|")
 
-		for x := 0; x < m.width; x++ {
+		for x := 0; x < m.Width; x++ {
 			index := m.getIndex(x, y)
-			if m.cells[index].bottom {
+			if m.cells[index].Bottom {
 				buffer.WriteString(" ")
 			} else {
 				buffer.WriteString("_")
 			}
-			if m.cells[index].right {
+			if m.cells[index].Right {
 				buffer.WriteString(" ")
 			} else {
 				buffer.WriteString("|")
