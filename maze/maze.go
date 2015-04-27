@@ -203,3 +203,47 @@ func (m Maze) String() string {
 
 	return buffer.String()
 }
+
+func (m Maze) IsValidMove(x, y int, dir Direction) bool {
+
+	var new_x, new_y int
+
+	switch dir {
+	case LEFT:
+		new_x, new_y = x-1, y
+	case RIGHT:
+		new_x, new_y = x+1, y
+	case UP:
+		new_x, new_y = x, y-1
+	case DOWN:
+		new_x, new_y = x, y+1
+	}
+
+	// not valid if it will move out of bounds
+	if new_x < 0 || new_y < 0 || new_x > m.Width || new_y > m.Height {
+		return false
+	}
+
+	cell := m.GetAt(x, y)
+	// cell direction value == false means there is a wall there
+	switch dir {
+	case LEFT:
+		if !cell.Left {
+			return false
+		}
+	case RIGHT:
+		if !cell.Right {
+			return false
+		}
+	case UP:
+		if !cell.Top {
+			return false
+		}
+	case DOWN:
+		if !cell.Bottom {
+			return false
+		}
+	}
+
+	return true
+}
